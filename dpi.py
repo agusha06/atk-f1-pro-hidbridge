@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+import sys
+import hid
+
+PACKETS = {
+    1: bytes([0x08, 0x07, 0x00, 0x00, 0x00, 0x0A, 0x40, 0x15, 0x03, 0x52, 0x01, 0x54, 0x00, 0x00, 0x00, 0x55, 0xE8]),
+    2: bytes([0x08, 0x07, 0x00, 0x00, 0x00, 0x0A, 0x40, 0x15, 0x03, 0x52, 0x02, 0x53, 0x00, 0x00, 0x00, 0x55, 0xE8]),
+    3: bytes([0x08, 0x07, 0x00, 0x00, 0x00, 0x0A, 0x40, 0x15, 0x03, 0x52, 0x00, 0x55, 0x00, 0x00, 0x00, 0x55, 0xE8]),
+}
+
+def find_mouse():
+    for dev in hid.enumerate():
+        if dev.get("interface_number") == 1:
+            return dev["path"]
+    return None
+
+def main():
+    if len(sys.argv) != 2 or sys.argv[1] not in ("1", "2", "3"):
+        sys.exit(1)
+
+    mode = int(sys.argv[1])
+    path = find_mouse()
+
+    if not path:
+        sys.exit(1)
+
+    try:
+        with hid.Device(path=path) as h:
+            h.write(PACKETS[mode])
+            print(f"{PACKETS[mode]}    ({mode})")
+    except Exception as e:
+        print(f"Ошибка: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
